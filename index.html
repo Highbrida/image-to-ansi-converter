@@ -42,7 +42,7 @@
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-6xl bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 space-y-6">
+    <div class="w-full max-w-3xl bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 space-y-6">
         
         <!-- Header -->
         <div class="text-center">
@@ -50,11 +50,11 @@
             <p class="text-gray-400 mt-2">Upload an image to convert it into colorful ANSI text blocks.</p>
         </div>
 
-        <!-- Main Content Area -->
-        <div class="grid md:grid-cols-3 gap-6 items-start">
+        <!-- Main Content Area (Single Column) -->
+        <div class="space-y-8">
             
-            <!-- Left Column: Controls & Image Preview -->
-            <div class="space-y-6 bg-gray-900/50 p-6 rounded-lg md:col-span-1">
+            <!-- Controls & Image Preview Section -->
+            <div class="space-y-6 bg-gray-900/50 p-6 rounded-lg">
                 <!-- File Input -->
                 <div>
                     <label for="image-upload" class="block text-sm font-medium text-gray-300 mb-2">1. Upload Image</label>
@@ -85,29 +85,26 @@
                 </div>
             </div>
 
-            <!-- Right Columns: Output & Preview -->
-            <div class="md:col-span-2 grid md:grid-cols-2 gap-6">
-                <!-- ANSI Preview Column -->
-                <div class="space-y-4 bg-gray-900/50 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-white">ANSI Preview</h3>
-                    <div class="bg-black rounded-md p-4 min-h-[300px] max-h-[400px] overflow-y-auto flex items-center justify-center">
-                        <div id="ansi-preview" class="text-gray-400">Preview will appear here...</div>
-                    </div>
+            <!-- ANSI Preview Box -->
+            <div class="space-y-4 bg-gray-900/50 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-white">ANSI Preview</h3>
+                <div class="bg-black rounded-md p-4 min-h-[250px] max-h-[400px] overflow-y-auto flex items-center justify-center">
+                    <div id="ansi-preview" class="text-gray-400">Preview will appear here...</div>
                 </div>
+            </div>
 
-                <!-- Raw Output Column -->
-                <div class="space-y-4 bg-gray-900/50 p-6 rounded-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-white">Raw ANSI Code</h3>
-                        <button id="copy-btn" class="px-4 py-2 bg-gray-600 text-sm font-medium rounded-md hover:bg-gray-700 transition-colors duration-200 hidden">
-                            Copy
-                        </button>
-                    </div>
-                    <div class="bg-black rounded-md p-4 min-h-[300px] max-h-[400px] overflow-y-auto">
-                        <pre id="ansi-output-raw" class="text-gray-400">Your ANSI code will appear here...</pre>
-                    </div>
-                     <div id="message-box" class="hidden text-center text-sm font-medium py-2 px-4 rounded-md"></div>
+            <!-- Raw Output Box -->
+            <div class="space-y-4 bg-gray-900/50 p-6 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-white">Raw ANSI Code</h3>
+                    <button id="copy-btn" class="px-4 py-2 bg-gray-600 text-sm font-medium rounded-md hover:bg-gray-700 transition-colors duration-200 hidden">
+                        Copy
+                    </button>
                 </div>
+                <div class="bg-black rounded-md p-4 min-h-[250px] max-h-[400px] overflow-y-auto">
+                    <pre id="ansi-output-raw" class="text-gray-400">Your ANSI code will appear here...</pre>
+                </div>
+                 <div id="message-box" class="hidden text-center text-sm font-medium py-2 px-4 rounded-md"></div>
             </div>
         </div>
         
@@ -326,4 +323,3 @@
     </script>
 </body>
 </html>
-
