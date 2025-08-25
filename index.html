@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to ANSI Art Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for better file input */
+        .file-input-button {
+            cursor: pointer;
+        }
+        /* Style for the output to look like a terminal */
+        #ansi-output-raw {
+            white-space: pre;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            line-height: 1.2;
+            font-size: 10px;
+            overflow-x: auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Style for the rendered preview */
+        #ansi-preview {
+            white-space: pre;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            line-height: 1; /* Tighter line height for block effect */
+            font-size: 8px; /* Can be adjusted */
+            overflow: hidden;
+            cursor: default;
+        }
+        #ansi-preview span {
+            display: inline-block;
+            width: 0.6em; /* Corresponds to font-size */
+            height: 1em;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-6xl bg-gray-800 rounded-xl shadow-2xl p-6 md:p-8 space-y-6">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-white">Image to ANSI Art Converter</h1>
+            <p class="text-gray-400 mt-2">Upload an image to convert it into colorful ANSI text blocks.</p>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="grid md:grid-cols-3 gap-6 items-start">
+            
+            <!-- Left Column: Controls & Image Preview -->
+            <div class="space-y-6 bg-gray-900/50 p-6 rounded-lg md:col-span-1">
+                <!-- File Input -->
+                <div>
+                    <label for="image-upload" class="block text-sm font-medium text-gray-300 mb-2">1. Upload Image</label>
+                    <input type="file" id="image-upload" accept="image/*" class="hidden">
+                    <label for="image-upload" class="file-input-button w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                        <span>Choose an image...</span>
+                    </label>
+                </div>
+                
+                <!-- Width Slider -->
+                <div>
+                    <label for="width-slider" class="block text-sm font-medium text-gray-300 mb-2">2. Adjust Width (<span id="width-value">80</span> chars)</label>
+                    <input type="range" id="width-slider" min="20" max="200" value="80" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+                
+                <!-- Generate Button -->
+                <button id="generate-btn" class="w-full bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                    3. Generate ANSI Art
+                </button>
+
+                <!-- Image Preview -->
+                <div id="preview-container" class="mt-4 hidden">
+                    <h3 class="text-lg font-semibold text-white mb-2">Image Preview</h3>
+                    <div class="bg-gray-900 p-2 rounded-md">
+                        <img id="image-preview" src="#" alt="Image Preview" class="max-w-full h-auto rounded-md mx-auto">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Columns: Output & Preview -->
+            <div class="md:col-span-2 grid md:grid-cols-2 gap-6">
+                <!-- ANSI Preview Column -->
+                <div class="space-y-4 bg-gray-900/50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-white">ANSI Preview</h3>
+                    <div class="bg-black rounded-md p-4 min-h-[300px] max-h-[400px] overflow-y-auto flex items-center justify-center">
+                        <div id="ansi-preview" class="text-gray-400">Preview will appear here...</div>
+                    </div>
+                </div>
+
+                <!-- Raw Output Column -->
+                <div class="space-y-4 bg-gray-900/50 p-6 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-white">Raw ANSI Code</h3>
+                        <button id="copy-btn" class="px-4 py-2 bg-gray-600 text-sm font-medium rounded-md hover:bg-gray-700 transition-colors duration-200 hidden">
+                            Copy
+                        </button>
+                    </div>
+                    <div class="bg-black rounded-md p-4 min-h-[300px] max-h-[400px] overflow-y-auto">
+                        <pre id="ansi-output-raw" class="text-gray-400">Your ANSI code will appear here...</pre>
+                    </div>
+                     <div id="message-box" class="hidden text-center text-sm font-medium py-2 px-4 rounded-md"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden canvas for processing -->
+        <canvas id="canvas" class="hidden"></canvas>
+    </div>
+
+    <script>
+        // DOM Elements
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const previewContainer = document.getElementById('preview-container');
+        const widthSlider = document.getElementById('width-slider');
+        const widthValue = document.getElementById('width-value');
+        const generateBtn = document.getElementById('generate-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const ansiOutputRaw = document.getElementById('ansi-output-raw');
+        const ansiPreview = document.getElementById('ansi-preview');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const messageBox = document.getElementById('message-box');
+
+        let originalImage = null;
+
+        // --- ANSI Color Palette Generation ---
+        const ansiPalette = [];
+
+        function generateAnsiPalette() {
+            // 0-15: Standard and high-intensity colors (hardcoded)
+            const standardColors = [
+                [0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0],
+                [0, 0, 128], [128, 0, 128], [0, 128, 128], [192, 192, 192],
+                [128, 128, 128], [255, 0, 0], [0, 255, 0], [255, 255, 0],
+                [0, 0, 255], [255, 0, 255], [0, 255, 255], [255, 255, 255]
+            ];
+            ansiPalette.push(...standardColors);
+
+            // 16-231: 6x6x6 color cube
+            const levels = [0, 95, 135, 175, 215, 255];
+            for (let r = 0; r < 6; r++) {
+                for (let g = 0; g < 6; g++) {
+                    for (let b = 0; b < 6; b++) {
+                        ansiPalette.push([levels[r], levels[g], levels[b]]);
+                    }
+                }
+            }
+
+            // 232-255: 24-step grayscale
+            for (let i = 0; i < 24; i++) {
+                const gray = 8 + i * 10;
+                ansiPalette.push([gray, gray, gray]);
+            }
+        }
+
+        // --- Core Logic ---
+
+        function colorDistance(rgb1, rgb2) {
+            const dr = rgb1[0] - rgb2[0];
+            const dg = rgb1[1] - rgb2[1];
+            const db = rgb1[2] - rgb2[2];
+            return dr * dr + dg * dg + db * db;
+        }
+
+        function findClosestAnsiColor(r, g, b) {
+            let minDistance = Infinity;
+            let bestIndex = -1;
+            for (let i = 0; i < ansiPalette.length; i++) {
+                const distance = colorDistance([r, g, b], ansiPalette[i]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    bestIndex = i;
+                }
+            }
+            return bestIndex;
+        }
+
+        // --- ANSI to HTML Renderer ---
+        function renderAnsiToHtml(ansiString) {
+            // Regex to find ANSI escape codes
+            const ansiRegex = /\x1b\[(.*?)(m)/g;
+            let html = '';
+            const lines = ansiString.split('\n');
+
+            lines.forEach(line => {
+                if (line.trim() === '') return;
+
+                const parts = line.split(ansiRegex);
+                let currentBgColor = null;
+
+                for (let i = 0; i < parts.length; i++) {
+                    // It's an escape code part
+                    if (i % 3 === 1) {
+                        const code = parts[i];
+                        if (code === '0') {
+                            currentBgColor = null;
+                        } else if (code.startsWith('48;5;')) {
+                            const colorIndex = parseInt(code.substring(5), 10);
+                            const rgb = ansiPalette[colorIndex];
+                            currentBgColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+                        }
+                    } 
+                    // It's a text part
+                    else if (i % 3 === 0 && parts[i].length > 0) {
+                        const text = parts[i];
+                        for (const char of text) {
+                            if (currentBgColor) {
+                                html += `<span style="background-color: ${currentBgColor};"></span>`;
+                            } else {
+                                html += '<span></span>';
+                            }
+                        }
+                    }
+                }
+                html += '\n';
+            });
+            return html;
+        }
+
+
+        // --- Event Listeners ---
+
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    originalImage = new Image();
+                    originalImage.onload = () => {
+                        imagePreview.src = event.target.result;
+                        previewContainer.classList.remove('hidden');
+                        generateBtn.disabled = false;
+                    };
+                    originalImage.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        widthSlider.addEventListener('input', (e) => {
+            widthValue.textContent = e.target.value;
+        });
+
+        generateBtn.addEventListener('click', () => {
+            if (!originalImage) return;
+
+            ansiOutputRaw.textContent = 'Generating...';
+            ansiPreview.innerHTML = '<div class="text-gray-400">Generating...</div>';
+            
+            setTimeout(() => {
+                const targetWidth = parseInt(widthSlider.value, 10);
+                const aspectRatio = originalImage.height / originalImage.width;
+                // Adjust for character aspect ratio (characters are taller than they are wide)
+                const targetHeight = Math.round(targetWidth * aspectRatio * 0.5);
+
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+
+                const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight).data;
+                let ansiString = '';
+
+                for (let y = 0; y < targetHeight; y++) {
+                    for (let x = 0; x < targetWidth; x++) {
+                        const index = (y * targetWidth + x) * 4;
+                        const r = imageData[index];
+                        const g = imageData[index + 1];
+                        const b = imageData[index + 2];
+                        
+                        const ansiIndex = findClosestAnsiColor(r, g, b);
+                        // Use \x1b for escape character. Using a block character ' ' for background.
+                        ansiString += `\x1b[48;5;${ansiIndex}m `;
+                    }
+                    // Reset color at the end of each line
+                    ansiString += '\x1b[0m\n';
+                }
+
+                // Update both outputs
+                ansiOutputRaw.textContent = ansiString;
+                ansiPreview.innerHTML = renderAnsiToHtml(ansiString);
+                
+                copyBtn.classList.remove('hidden');
+            }, 50);
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const textarea = document.createElement('textarea');
+            textarea.value = ansiOutputRaw.textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showMessage('Copied to clipboard!', 'success');
+            } catch (err) {
+                showMessage('Failed to copy!', 'error');
+            }
+            document.body.removeChild(textarea);
+        });
+
+        function showMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-green-500/20', 'text-green-300', 'bg-red-500/20', 'text-red-300');
+            
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-500/20', 'text-green-300');
+            } else {
+                messageBox.classList.add('bg-red-500/20', 'text-red-300');
+            }
+
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 2000);
+        }
+
+        // --- Initialization ---
+        generateAnsiPalette();
+    </script>
+</body>
+</html>
+
